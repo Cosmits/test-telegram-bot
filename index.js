@@ -70,12 +70,16 @@ const start = async () => {
             return startGame(chatId)
         }
 
-        if (data == chats[chatId]) {
-            await bot.sendMessage(chatId, `Вітаю ти угадав => ${data}`, againOptions)
+        const user = await UserModel.findOne({chatId})
 
+        if (data == chats[chatId]) {
+            user.right = user.right +1
+            await bot.sendMessage(chatId, `Вітаю ти угадав => ${data}`, againOptions)
         } else {
-            return await bot.sendMessage(chatId, `Ти не угадав.`)
+            user.wrong = user.right +1
+            await bot.sendMessage(chatId, `Ти не угадав.`)
         }
+        await user.save()
         // return  bot.sendMessage(chatId, `Ти нажав | ${data}`)
     })
 }
