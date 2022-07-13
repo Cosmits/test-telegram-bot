@@ -1,8 +1,8 @@
 const token = '818463216:AAE-nPMtX74kajvWPzSQZWEcvVvWus656Tw'
-const {gameOptions, againOptions} = require('./options.js')
+const {gameOptions, againOptions} = require('./options')
 const TelegramApi = require('node-telegram-bot-api')
-const sequelize = require('./db.js')
-const UserModel = require('./models.js')
+const sequelize = require('./db')
+const UserModel = require('./models')
 
 const bot = new TelegramApi(token, {polling: true })
 const chats = {}
@@ -11,8 +11,8 @@ const chats = {}
 
 const startGame = async (chatId) => {
     await bot.sendMessage(chatId, `Загадай цифру от 0 до 10`)
-    const randomNumb = Math.floor(Math.random()*10 )
-    chats[chatId] = randomNumb
+
+    chats[chatId] = Math.floor(Math.random()*10 )
     await bot.sendMessage(chatId, `-=Отгадай=-`, gameOptions)
 }
 
@@ -26,12 +26,10 @@ const start = async () => {
     }
 
 
-
-
     bot.setMyCommands([
         {command: '/start', description: 'START'},
         {command: '/info', description: 'INFO bot'},
-        {command: '/game', description: 'GAME guess the NUBMER'},
+        {command: '/game', description: 'GAME      Guess the NUBMER'},
     ])
 
     bot.on('message', async msg => {
