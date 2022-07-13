@@ -74,7 +74,7 @@ const start = async () => {
             user.right = user.right +1
             await bot.sendMessage(chatId, `Вітаю ти угадав => ${data}`, againOptions)
         } else {
-            user.wrong = user.right +1
+            user.wrong = user.wrong +1
             await bot.sendMessage(chatId, `Ти не угадав.`)
         }
         await user.save()
