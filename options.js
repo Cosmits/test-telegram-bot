@@ -19,5 +19,13 @@ module.exports =
             ]
         }
     )
-}
+},
+        delOptions: {
+            reply_markup: JSON.stringify({
+                    inline_keyboard: [
+                        [{text: 'Обнулити результати гри', callback_data: '/del'}],
+                    ]
+                }
+            )
+        }
     }

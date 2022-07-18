@@ -1,12 +1,12 @@
 const token = '818463216:AAE-nPMtX74kajvWPzSQZWEcvVvWus656Tw'
-const {gameOptions, againOptions} = require('./options')
+const {gameOptions, againOptions, delOptions} = require('./options')
 const TelegramApi = require('node-telegram-bot-api')
 const sequelize = require('./db')
-const UserModel = require('./models')
+const UserModel = require('./models/models_User')
+const FilesInDB = require('./models/model_FIlesInDB')
 
 const bot = new TelegramApi(token, {polling: true })
 const chats = {}
-
 
 
 const startGame = async (chatId) => {
@@ -29,46 +29,86 @@ const start = async () => {
     bot.setMyCommands([
         {command: '/start', description: 'START'},
         {command: '/info', description: 'INFO bot'},
-        {command: '/game', description: 'GAME      Guess the NUBMER'},
+        {command: '/game', description: 'GAME   Вгадай число'},
     ])
 
     bot.on('message', async msg => {
-        const text = msg.text
-        const chatId = msg.chat.id
+        let chatId = msg.chat.id.toString()
+        let text = (msg.text || "") ? msg.text.toString() : ""
+        let userName = (msg.chat.username || "") ? msg.chat.username.toString() : ""
+        if (userName === "") {
+            let first_name = (msg.chat.first_name || "") ? msg.chat.first_name.toString() : ""
+            let last_name = (msg.chat.last_name || "") ? msg.chat.last_name.toString() : ""
+            userName = `${last_name} ${first_name}`.trim()
+        }
+        // // console.log(msg)
+        // if (msg.photo && msg.photo[0]) {
+        //     const image = await bot.getFile({ file_id: msg.photo[0].file_id });
+        //     console.log(image);
+        // }
 
         try {
             if (text === '/start') {
-                await UserModel.create({chatId})
-                await bot.sendSticker(chatId, 'https://cdn.tlgrm.app/stickers/e1d/bfa/e1dbfa48-1f85-4b73-88d4-b79706d58305/192/10.webp')
-                return  await bot.sendMessage(chatId, `Привіт. Радий вітати тебе ${msg.from.username} в ТЕЛЕГРАМ БОТІ`)
+                const [user, createdUserModel] = await UserModel.findOrCreate({where: {chatId}})
+                const [filesInDB, createdFilesInDB] = await FilesInDB.findOrCreate({where: {chatId}})
+
+                await bot.sendSticker(chatId,'CAACAgIAAxkBAAIP3WLTMp98DiDINPKm3fnnRcAixRXPAAJ2EQACwwABKUktuSMZZroOiCkE')
+
+                if (createdUserModel) {
+                    //this is new user
+                    await bot.sendMessage(chatId, `Привіт. ${userName}\nРадий вітати тебе в ТЕЛЕГРАМ БОТІ`)
+                    // console.log('//// start  //// ',user)
+
+                } else {
+                    await bot.sendMessage(chatId, `Привіт. ${userName}\nЗ поверненням тебе в ТЕЛЕГРАМ БОТ`)
+                    // user.wrong = 0
+                    // user.right = 0
+                }
+                // console.log("userName 000 ",userName)
+                user.userName = userName
+                if (createdFilesInDB) {
+                    filesInDB.userName = userName
+                    await filesInDB.save()
+                }
+
+                return await user.save()
             }
+
             if (text === '/info') {
-                const user = await UserModel.findOne({chatId})
-                await bot.sendSticker(chatId, 'https://cdn.tlgrm.app/stickers/e1d/bfa/e1dbfa48-1f85-4b73-88d4-b79706d58305/192/9.webp')
-                await bot.sendMessage(chatId, `Результати Гри  ${user.right} / ${user.wrong}`)
-                return await bot.sendMessage(chatId, `Тебе звати  ${msg.from.username}  ${msg.from.first_name}`)
+                const user = await UserModel.findOne({where: {chatId}})
+                // console.log(`/info ${user.userName}  chatId=${chatId}`)
+                await bot.sendSticker(chatId,'CAACAgIAAxkBAAIP2GLTMRlCUKQBvRy9IduAJGUD9DdiAAK8DAAChygwSe03kZlYIWgEKQQ')
+                await bot.sendMessage(chatId, `Профіль  ${userName}`)
+                return await bot.sendMessage(chatId, `Результати Гри  ${user.right} / ${user.wrong}`,delOptions)
             }
             if (text === '/game') {
                 return startGame(chatId)
             }
-
+            // console.log(msg)
             return await bot.sendMessage(chatId, `Я тебе не розумію \nТи написав повідомлення => ${text}`)
-            // bot.sendMessage(chatId, `Ти написав => ${text}`)
+
         }catch (e) {
-            return await bot.sendMessage(chatId,'Error in bot ',e)
+            console.log(`Error in bot`, e)
+            return await bot.sendMessage(chatId,`Error in bot ${e}`)
         }
-
-
     })
 
     bot.on('callback_query' , async msg => {
-        const data = msg.data
-        const chatId = msg.message.chat.id
+        let data = msg.data.toString()
+        let chatId = msg.message.chat.id.toString()
+        // console.log(msg)
+        const user = await UserModel.findOne({where: {chatId}})
+
         if (data === '/again') {
             return startGame(chatId)
         }
 
-        const user = await UserModel.findOne({chatId})
+        if (data === '/del') {
+            user.right = 0
+            user.wrong = 0
+            await user.save()
+            return await bot.sendMessage(chatId, `Результати Гри  ${user.right} / ${user.wrong}`)
+        }
 
         if (data == chats[chatId]) {
             user.right = user.right +1
@@ -77,6 +117,7 @@ const start = async () => {
             user.wrong = user.wrong +1
             await bot.sendMessage(chatId, `Ти не угадав.`)
         }
+        // user.userName = msg.message.chat.username.toString()
         await user.save()
         // return  bot.sendMessage(chatId, `Ти нажав | ${data}`)
     })

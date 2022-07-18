@@ -2,10 +2,11 @@ const {Sequelize} = require('sequelize');
 
 module.exports = new Sequelize(
     'telegram_base',
-    'datacollector_user',
-    'dDlRkX9gfG8tnBUfYJavN',
+    'postgres',
+    'qqwwee',
     {
-        host: 'localhost',
+//        host: 'localhost',
+        host: 'alibaba.cos.cloudns.cl',
         port: 5432,
         dialect:  'postgres'
     })
