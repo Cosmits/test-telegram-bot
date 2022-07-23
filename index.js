@@ -1,14 +1,24 @@
-const token = '818463216:AAE-nPMtX74kajvWPzSQZWEcvVvWus656Tw'
+require('dotenv').config()
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN'
 const {gameOptions, againOptions, delOptions} = require('./options')
-const TelegramApi = require('node-telegram-bot-api')
+const TelegramApi       = require('node-telegram-bot-api')
 const sequelize = require('./db')
 const UserModel = require('./models/models_User')
-const FilesInDB = require('./models/model_FIlesInDB')
+const {saveFileInToDB}   = require("./method/savefileInTodb")
+const {getUserName}     = require("./method/msgMethods");
 
-const bot = new TelegramApi(token, {polling: true })
+const bot = new TelegramApi(TELEGRAM_TOKEN, {polling: true })
 const chats = {}
+const appdir = __dirname.toString()
+const stikers = new Map([
+    ['fireBike',       'CAACAgIAAxkBAAIP3WLTMp98DiDINPKm3fnnRcAixRXPAAJ2EQACwwABKUktuSMZZroOiCkE'],
+    ['fireNotebook',   'CAACAgIAAxkBAAIP2GLTMRlCUKQBvRy9IduAJGUD9DdiAAK8DAAChygwSe03kZlYIWgEKQQ' ],
+    ['key3', 'value3']
+]);
 
 
+
+//+addition functions
 const startGame = async (chatId) => {
     await bot.sendMessage(chatId, `Загадай цифру от 0 до 10`)
 
@@ -16,15 +26,18 @@ const startGame = async (chatId) => {
     await bot.sendMessage(chatId, `-=Отгадай=-`, gameOptions)
 }
 
-const start = async () => {
+
+// This is generals function for start bot
+(async () => {
+
+    console.log("TELEGRAM_TOKEN = ",TELEGRAM_TOKEN)
 
     try {
         await sequelize.authenticate()
         await sequelize.sync()
     }catch (e) {
-        console.log(`Error connection to DB `,e)
+        console.log(`Error connection to DataBase (lib sequelize)`,e)
     }
-
 
     bot.setMyCommands([
         {command: '/start', description: 'START'},
@@ -35,24 +48,19 @@ const start = async () => {
     bot.on('message', async msg => {
         let chatId = msg.chat.id.toString()
         let text = (msg.text || "") ? msg.text.toString() : ""
-        let userName = (msg.chat.username || "") ? msg.chat.username.toString() : ""
-        if (userName === "") {
-            let first_name = (msg.chat.first_name || "") ? msg.chat.first_name.toString() : ""
-            let last_name = (msg.chat.last_name || "") ? msg.chat.last_name.toString() : ""
-            userName = `${last_name} ${first_name}`.trim()
-        }
-        // // console.log(msg)
-        // if (msg.photo && msg.photo[0]) {
-        //     const image = await bot.getFile({ file_id: msg.photo[0].file_id });
-        //     console.log(image);
-        // }
+        let userName = getUserName(msg)
 
         try {
+            // console.log(msg)
+            if (msg.photo && msg.photo[msg.photo.length-1]) {
+                return saveFileInToDB(bot, msg, appdir)
+            }
+
             if (text === '/start') {
                 const [user, createdUserModel] = await UserModel.findOrCreate({where: {chatId}})
-                const [filesInDB, createdFilesInDB] = await FilesInDB.findOrCreate({where: {chatId}})
+                // const [filesInDB, createdFilesInDB] = await FilesInDB.findOrCreate({where: {chatId}})
 
-                await bot.sendSticker(chatId,'CAACAgIAAxkBAAIP3WLTMp98DiDINPKm3fnnRcAixRXPAAJ2EQACwwABKUktuSMZZroOiCkE')
+                await bot.sendSticker(chatId,stikers.get('fireBike'))
 
                 if (createdUserModel) {
                     //this is new user
@@ -66,18 +74,13 @@ const start = async () => {
                 }
                 // console.log("userName 000 ",userName)
                 user.userName = userName
-                if (createdFilesInDB) {
-                    filesInDB.userName = userName
-                    await filesInDB.save()
-                }
-
                 return await user.save()
             }
 
             if (text === '/info') {
                 const user = await UserModel.findOne({where: {chatId}})
                 // console.log(`/info ${user.userName}  chatId=${chatId}`)
-                await bot.sendSticker(chatId,'CAACAgIAAxkBAAIP2GLTMRlCUKQBvRy9IduAJGUD9DdiAAK8DAAChygwSe03kZlYIWgEKQQ')
+                await bot.sendSticker(chatId,stikers.get('fireNotebook'))
                 await bot.sendMessage(chatId, `Профіль  ${userName}`)
                 return await bot.sendMessage(chatId, `Результати Гри  ${user.right} / ${user.wrong}`,delOptions)
             }
@@ -88,8 +91,8 @@ const start = async () => {
             return await bot.sendMessage(chatId, `Я тебе не розумію \nТи написав повідомлення => ${text}`)
 
         }catch (e) {
-            console.log(`Error in bot`, e)
-            return await bot.sendMessage(chatId,`Error in bot ${e}`)
+            await bot.sendMessage(chatId,`Error in bot ${e}`)
+            return  console.log(`Error in bot`, e)
         }
     })
 
@@ -121,6 +124,5 @@ const start = async () => {
         await user.save()
         // return  bot.sendMessage(chatId, `Ти нажав | ${data}`)
     })
-}
+})();
 
-start()
