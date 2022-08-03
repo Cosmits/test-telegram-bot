@@ -1,9 +1,9 @@
-const sequelize = require("../db")
-const {DataTypes, Model} = require("sequelize")
-const UserModel = require('./models_User')
+import {DataTypes, Model} from "sequelize"
 
-//old method creating Models
+import sequelize from './db.js'
+import UserModel from './models_User.js'
 
+////old method creating Models
 // const FilesInDB = sequelize.define('files',{
 //     id: {type: DataTypes.INTEGER, primaryKey: true, unique: true, autoIncrement: true},
 //     chatId: {type: DataTypes.STRING, unique: false},
@@ -13,6 +13,7 @@ const UserModel = require('./models_User')
 
 
 class FilesInDB extends Model {}
+
 FilesInDB.init({
     id: {type: DataTypes.INTEGER, primaryKey: true, unique: true, autoIncrement: true},
     chatId: {type: DataTypes.STRING, unique: false},
@@ -20,10 +21,10 @@ FilesInDB.init({
     file: {type: DataTypes.BLOB('long'), unique: false},
     }, {
     sequelize,
-    modelName: 'filesInDB'
+    modelName: 'files'
 });
 
 UserModel.hasMany(FilesInDB, {as: 'FilesInDB', foreignKey: 'user_id'} );
 // const Creator = FilesInDB.belongsTo(UserModel, { as: 'creator' });
 
-module.exports = FilesInDB
+export default FilesInDB
