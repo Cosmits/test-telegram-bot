@@ -10,13 +10,36 @@ Node.js module to interact with the official [Telegram Bot API](https://core.tel
 
 ## Install
 
+Create PostgreSQL data base. Run psql console and type this commands:
 ```sh
+sudo apt install postgresql postgresql-contrib
+sudo -u postgres psql
+
+curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+```
+```sh
+CREATE DATABASE telegram_base;
+CREATE USER db_user WITH password 'anypass';
+GRANT ALL ON DATABASE telegram_base TO db_user;
+```
+rename  .env.example to .env,  
+setup connection parameters  in file .env
+
+```sh
+npm install -g npm
 npm install
 npm run start
 ```
-rename  .env.example to .env,  
-replace TOKEN in file .env,  
-replace DB settings in file .env
+
+Start or Stop bot in background
+
+```sh
+npm install pm2
+pm2 start index.js
+pm2 stop  index.js
+```
 
 ## Можливості
 

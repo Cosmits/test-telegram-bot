@@ -26,7 +26,7 @@ const start = async () => {
         {command: '/start', description: '🎌 START'},
         {command: '/info', description: '🔎 Профіль користувача'},
         {command: '/about', description: '🤦 Додаткова інформація'},
-        {command: '/files_from_db', description: '📦 Прочитати файли з DB📦 Прочитати файли з DB'},
+        {command: '/files_from_db', description: '📦 Прочитати файли з DB'},
         {command: '/game', description: '🎲 Start Game'},])
 
     bot.on('message', async msg => {
