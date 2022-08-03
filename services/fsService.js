@@ -7,6 +7,12 @@ class FsService {
 
     async saveOnDisk(bot, fileId) {
         let new_name = null
+        fs.mkdir(path.join(process.cwd(), '/media'), (err) => {
+            if (err) {
+                return console.error(err);
+            }
+            // console.log('Directory created successfully!');
+        })
         const mediaFolder = path.join(process.cwd(), '/media');
         await bot.downloadFile(fileId, mediaFolder)
             .then(async (respons) => {
@@ -27,12 +33,12 @@ class FsService {
         await fs.rm(fileName, {recursive: true}, (err) => {
             if (err) {
                 // File deletion failed
-                console.error(err.message)
-                return
+                return console.error(err.message)
+
             }
         })
         // console.log(" File deleted successfully");
-        return
+        return ''
     }
 
     async readFileToBuffer(new_name) {
