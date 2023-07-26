@@ -21,7 +21,7 @@ const botBuffer = {
     dbOrDisk_message_id: 0, // повідомлення з Клавіатурою зберегти на диск ЧИ БД
     fullFileName: null,
     count: 0                // кількість спроб вгадати не повинно бути > 9
-                            // поле з індексом Чата містить загадане число
+    // поле з індексом Чата містить загадане число
 }
 let fileId = null
 
@@ -30,7 +30,7 @@ const getID = (msg) => (msg.chat) ? msg.chat.id.toString() : msg.from.id.toStrin
 class TgService {
 
     constructor(bot) {
-        this.bot = bot || new TelegramBot(tokens.TELEGRAM_TOKEN, {polling: true});
+        this.bot = bot || new TelegramBot(tokens.TELEGRAM_TOKEN, { polling: true });
     }
 
     getUserName(msg) {
@@ -86,7 +86,7 @@ class TgService {
         }
     }
 
-    async getFilesList(msg){
+    async getFilesList(msg) {
         const { count, rows } = await dbService.getFilesListFromDB(getID(msg))
 
         // console.log(count);
@@ -104,7 +104,7 @@ class TgService {
     }
 
     async startCommand(msg) {
-        const createdUser = await dbService.findOrCreateUser(msg, getID(msg), this.getUserName(msg))
+        const createdUser = await dbService.findOrCreateUser(getID(msg), this.getUserName(msg))
         const [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
         const keyboard = tgKeyboard.gameCancellation()
 
@@ -137,7 +137,7 @@ class TgService {
     }
 
     async cleanCommand(msg) {
-        await dbService.findOrCreateUser(msg, getID(msg), null, 0, 0)
+        await dbService.findOrCreateUser(getID(msg), null, 0, 0)
         return this.infoCommand(msg)
     }
 
@@ -196,7 +196,7 @@ class TgService {
         } else {
 
             wrong = wrong + 1
-            // await dbService.findOrCreateUser(msg, getID(msg),null,null,wrong)
+            // await dbService.findOrCreateUser(getID(msg),null,null,wrong)
 
             botBuffer.count += 1
             botBuffer.message_id = msg.message.message_id
@@ -219,7 +219,7 @@ class TgService {
                 // console.log(botBuffer.try_message_id)
             }
         }
-        return dbService.findOrCreateUser(msg, getID(msg), null, right, wrong)
+        return dbService.findOrCreateUser(getID(msg), null, right, wrong)
     }
 
     async aboutCommand(msg) {
@@ -255,7 +255,7 @@ class TgService {
         }
 
         if (data === '/yes') {
-            await dbService.findOrCreateUser(msg, getID(msg), this.getUserName(msg), null, null, stickers[getID(msg)])
+            await dbService.findOrCreateUser(getID(msg), this.getUserName(msg), null, null, stickers[getID(msg)])
             return this.bot.sendMessage(getID(msg), `Новий стікер вже в профілі`)
         } else {  ///    no
             stickers[getID(msg)] = null

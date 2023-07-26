@@ -5,9 +5,8 @@ import sequelize from './models/db.js'
 
 import TgServices from './services/tgService.js'
 
-const bot = new TelegramApi(tokens.TELEGRAM_TOKEN, {polling: true})
+const bot = new TelegramApi(tokens.TELEGRAM_TOKEN, { polling: true })
 const tgServices = new TgServices(bot)
-
 
 // This is generals function for start bot
 const start = async () => {
@@ -23,11 +22,11 @@ const start = async () => {
     }
 
     bot.setMyCommands([
-        {command: '/start', description: '🎌 START'},
-        {command: '/info', description: '🔎 Профіль користувача'},
-        {command: '/about', description: '🤦 Додаткова інформація'},
-        {command: '/files_from_db', description: '📦 Прочитати файли з DB'},
-        {command: '/game', description: '🎲 Start Game'},])
+        { command: '/start', description: '🎌 START' },
+        { command: '/info', description: '🔎 Профіль користувача' },
+        { command: '/about', description: '🤦 Додаткова інформація' },
+        { command: '/files_from_db', description: '📦 Прочитати файли з DB' },
+        { command: '/game', description: '🎲 Start Game' },])
 
     bot.on('message', async msg => {
         let text = (msg.text || "") ? msg.text.toString() : ""
@@ -76,9 +75,9 @@ const start = async () => {
         } else if (data === '/yes' || data === '/no') {
             return tgServices.yesNO(msg, data)
         } else if (data === '/saveToDB') {
-             return tgServices.saveToDB(msg)
+            return tgServices.saveToDB(msg)
         } else if (data === '/SaveOnDisk') {
-             return tgServices.saveOnDisk(msg)
+            return tgServices.saveOnDisk(msg)
         } else {
             return tgServices.gameProcess(msg)
         }
@@ -88,4 +87,4 @@ const start = async () => {
     })
 }
 
-start()
+start();

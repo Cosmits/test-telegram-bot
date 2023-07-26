@@ -34,7 +34,6 @@ class FsService {
             if (err) {
                 // File deletion failed
                 return console.error(err.message)
-
             }
         })
         // console.log(" File deleted successfully");
