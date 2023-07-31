@@ -120,20 +120,20 @@ class TgService {
     }
 
     async infoCommand(msg) {
-        const [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
         try {
-            if (botBuffer.game_message_id > 0) {
+            const [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
+            if (botBuffer.game_message_id) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
+                botBuffer.game_message_id = 0
             }
+            await this.bot.sendSticker(getID(msg), userSticker)
+            await this.bot.sendMessage(getID(msg), `Профіль  ${userName}`)
+
+            const keyboard = tgKeyboard.gameCancellation()
+            await this.bot.sendMessage(getID(msg), `Результати Гри  ${right} / ${wrong}`, keyboard)
         } catch (e) {
             console.log(`--- Error infoCommand = ${botBuffer.game_message_id}`)
         }
-
-        await this.bot.sendSticker(getID(msg), userSticker)
-        await this.bot.sendMessage(getID(msg), `Профіль  ${userName}`)
-
-        const keyboard = tgKeyboard.gameCancellation()
-        return await this.bot.sendMessage(getID(msg), `Результати Гри  ${right} / ${wrong}`, keyboard)
     }
 
     async cleanCommand(msg) {
@@ -143,11 +143,12 @@ class TgService {
 
     async startGame(msg) {
         try {
-            if (botBuffer.game_message_id > 0) {
+            if (botBuffer.game_message_id) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
+                botBuffer.game_message_id = 0
             }
             await this.bot.sendMessage(getID(msg), `Загадай цифру от 0 до 10`)
-    
+
             botBuffer[getID(msg)] = Math.floor(Math.random() * 10)
             // console.log(botBuffer[getID(msg)])
             let keyboard = tgKeyboard.gameNumber()
@@ -166,6 +167,7 @@ class TgService {
             //delete msg (видалити повідомлення з Спробою вгадати число)
             if (botBuffer.count > 0 && botBuffer.try_message_id > 0) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.try_message_id)
+                botBuffer.try_message_id = 0
             }
         } catch (e) {
             console.log(`--- Error gameProcess try_message_id = ${botBuffer.try_message_id}`)
@@ -176,6 +178,7 @@ class TgService {
                 //delete msg (видалити повідомлення з Клавіатурою чисел для гри)
                 if (botBuffer.game_message_id > 0) {
                     await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
+                    botBuffer.game_message_id = 0
                 }
             } catch (e) {
                 console.log(`--- Error gameProcess if data = ${botBuffer.game_message_id}`)
@@ -201,6 +204,7 @@ class TgService {
                 try {
                     if (botBuffer.game_message_id > 0) {
                         await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
+                        botBuffer.game_message_id = 0
                     }
                 } catch (e) {
                     console.log(`--- Error gameProcess else = ${botBuffer.game_message_id}`)
@@ -251,6 +255,7 @@ class TgService {
         try {
             if (botBuffer.game_message_id > 0) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
+                botBuffer.game_message_id = 0
             }
 
             if (data === '/yes') {
