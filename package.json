@@ -1,6 +1,6 @@
 {
   "name": "bot-nodejs",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "TelegramBot, Telegram-bot",
   "main": "index.js",
   "type": "module",

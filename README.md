@@ -84,12 +84,14 @@ pm2 stop  index.js
 * [PostgreSQL client][PostgreSQL]
 * [Sequelize][sequelize]
 * [dotenv][dotenv]
+* [Database.NET][Database.NET]
 
 ## License
 
-Copyright © 2022 -=Cosmit=-
+Copyright © 2022 -=[CoS]=-
 
 [dotenv]:https://github.com/motdotla/dotenv
 [sequelize]:https://sequelize.org/
 [Node.js-Telegram-Bot-API]:https://www.npmjs.com/package/node-telegram-bot-api
 [PostgreSQL]:https://www.npmjs.com/package/node-telegram-bot-api
+[Database.NET]:https://fishcodelib.com/Database.htm
