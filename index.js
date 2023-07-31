@@ -8,6 +8,7 @@ import TgServices from './services/tgService.js'
 const bot = new TelegramApi(tokens.TELEGRAM_TOKEN, { polling: true })
 const tgServices = new TgServices(bot)
 
+
 // This is generals function for start bot
 const start = async () => {
 
@@ -16,16 +17,16 @@ const start = async () => {
     try {
         await sequelize.authenticate()
         await sequelize.sync()
-        console.log(`Підключення до БД встановлено (lib sequelize)`)
+        console.log(`Підключення до БазиДаних встановлено (lib sequelize)`)
     } catch (e) {
-        console.log(`Помилка при підключенні до БД (lib sequelize)\n`, e)
+        console.error(`Помилка при підключенні до БазиДаних (lib sequelize)\n`, e)
     }
 
     bot.setMyCommands([
         { command: '/start', description: '🎌 START' },
         { command: '/info', description: '🔎 Профіль користувача' },
         { command: '/about', description: '🤦 Додаткова інформація' },
-        { command: '/files_from_db', description: '📦 Прочитати файли з DB' },
+        { command: '/files_from_db', description: '📦 Прочитати файли з БазиДаних' },
         { command: '/game', description: '🎲 Start Game' },])
 
     bot.on('message', async msg => {
@@ -34,7 +35,7 @@ const start = async () => {
         try {
             // console.log(msg)
             if (msg.photo && msg.photo[msg.photo.length - 1]) {
-                return tgServices.SavePhoto(msg)
+                return tgServices.requestSavePhoto(msg)
             } else if (msg.sticker) {
                 return tgServices.saveStickerInProfile(msg)
             } else if (text === '/start') {
@@ -45,11 +46,11 @@ const start = async () => {
                 return tgServices.aboutCommand(msg)
             } else if (text === '❌ Обнулити результати') {
                 return tgServices.cleanCommand(msg)
-            } else if (text === '🏆 Рекодсмени гри') {
+            } else if (text === '🏆 Рекордсмени гри') {
                 return tgServices.bestGamerCommand(msg)
             } else if (text === '/game' || text === '🎲 Start Game') {
                 return tgServices.startGame(msg)
-            } else if (text === '/files_from_db' || text === '📦 Прочитати файли з DB') {
+            } else if (text === '/files_from_db' || text === '📦 Прочитати файли з БазиДаних') {
                 return tgServices.getFilesList(msg)
             } else {
                 return tgServices.errorCommand(msg, undefined, text)
@@ -87,4 +88,4 @@ const start = async () => {
     })
 }
 
-start();
+start()

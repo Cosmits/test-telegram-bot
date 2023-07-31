@@ -16,10 +16,9 @@ const stickers = {
 }
 
 const botBuffer = {
-    game_message_id: 0,     //повідомлення з Клавіатурою чисел для гри
-    try_message_id: 0,      // повідомлення з Зпробою вгадать число
+    game_message_id: 0,     // повідомлення з Клавіатурою чисел для гри
+    try_message_id: 0,      // повідомлення з Спробою вгадати число
     dbOrDisk_message_id: 0, // повідомлення з Клавіатурою зберегти на диск ЧИ БД
-    fullFileName: null,
     count: 0                // кількість спроб вгадати не повинно бути > 9
     // поле з індексом Чата містить загадане число
 }
@@ -35,9 +34,7 @@ class TgService {
 
     getUserName(msg) {
         const objectInMsg = (msg.chat) ? "chat" : "from"
-
         let userName = (msg[objectInMsg].username || "") ? msg[objectInMsg].username.toString() : ""
-
         if (userName === "") {
             let first_name = (msg[objectInMsg].first_name || "") ? msg[objectInMsg].first_name.toString() : ""
             let last_name = (msg[objectInMsg].last_name || "") ? msg[objectInMsg].last_name.toString() : ""
@@ -46,61 +43,65 @@ class TgService {
         return userName
     }
 
-    async SavePhoto(msg) {
+    async requestSavePhoto(msg) {
         //Спитати куда записати в БД чи на Диск
         fileId = msg.photo[msg.photo.length - 1].file_id;
 
-        const keyboard = tgKeyboard.dbOrDisk()
-        const answer = await this.bot.sendMessage(getID(msg), `Зберегти файл`, keyboard)
-        botBuffer.dbOrDisk_message_id = answer.message_id
-        return answer
+        const keyboard = tgKeyboard.dbOrDisk();
+        const answer = await this.bot.sendMessage(getID(msg), `Зберегти файл`, keyboard);
+        botBuffer.dbOrDisk_message_id = answer.message_id;
+        return answer;
     }
 
     async saveOnDisk(msg, sendMessage = true) {
-        const recived_file = await fsService.saveOnDisk(this.bot, fileId)
         try {
-            //delete msg (видалити повідомлення з Клавіатурою чисел для гри)
-            if (botBuffer.dbOrDisk_message_id > 0) {
-                await this.bot.deleteMessage(getID(msg), botBuffer.dbOrDisk_message_id)
+            //delete msg (видалити повідомлення з Клавіатурою dbOrDisk)
+            if (botBuffer.dbOrDisk_message_id) {
+                await this.bot.deleteMessage(getID(msg), botBuffer.dbOrDisk_message_id);
+                botBuffer.dbOrDisk_message_id = 0;
             }
-        } catch (e) {
-            console.log(`--- Error SaveOnDisk = ${botBuffer.dbOrDisk_message_id}`)
+            const received_file = await fsService.saveOnDisk(this.bot, fileId);
+            if (sendMessage) {
+                await this.bot.sendMessage(getID(msg), `Файл збережений на диск \n\n${received_file}`)
+            }
+            return received_file
+        } catch (error) {
+            console.error(`--- Error SaveOnDisk \n`, error)
         }
-        if (sendMessage) {
-            return this.bot.sendMessage(getID(msg), `Файл збережений на диск \n\n${recived_file}`)
-        }
-        botBuffer.fullFileName = recived_file
-        return recived_file
     }
 
     async saveToDB(msg) {
-        await this.saveOnDisk(msg, false)
-        if (botBuffer.fullFileName != null) {
-            const imageData = await fsService.readFileToBuffer(botBuffer.fullFileName)
-            // console.log(imageData)
-            await dbService.saveOnDB(getID(msg), imageData)
-            //Удаляем файл с диска
-            await fsService.delFile(botBuffer.fullFileName)
-            botBuffer.fullFileName = null
-            return this.bot.sendMessage(getID(msg), `Файл завантажено !!!`)
+        try {
+            //delete msg (видалити повідомлення з Клавіатурою dbOrDisk)
+            if (botBuffer.dbOrDisk_message_id) {
+                await this.bot.deleteMessage(getID(msg), botBuffer.dbOrDisk_message_id);
+                botBuffer.dbOrDisk_message_id = 0;
+            }
+            const dataFile = await this.saveOnDisk(msg, false);
+            if (dataFile) {
+                const imageData = await fsService.readFileToBuffer(dataFile)
+                if (imageData) {
+                    await dbService.saveOnDB(getID(msg), imageData);
+                    await fsService.delFile(dataFile);
+                }
+                return this.bot.sendMessage(getID(msg), `Файл завантажено до PostgreSQL ...`);
+            }
+        } catch (error) {
+            console.log(`--- Error saveToDB \n`, error)
         }
     }
 
     async getFilesList(msg) {
-        const { count, rows } = await dbService.getFilesListFromDB(getID(msg))
-
-        // console.log(count);
-        // console.log(rows);
-
-        for (let index = 0; index < count; ++index) {
-            // console.log(rows[index]);
-            await fsService.writeFileFromBuffer(botBuffer, rows[index].dataValues.file)
-            await this.bot.sendPhoto(getID(msg), botBuffer.fullFileName)
-            //Удаляем файл с диска
-            await fsService.delFile(botBuffer.fullFileName)
+        try {
+            const arrFiles = await dbService.getFilesListFromDB(getID(msg))
+            for (const el of arrFiles) {
+                const newFile = await fsService.writeFileFromBuffer(el.dataValues.file);
+                await this.bot.sendPhoto(getID(msg), newFile);
+                await fsService.delFile(newFile)
+            }
+        } catch (error) {
+            console.log(`--- Error getFilesList \n`, error)
         }
-        botBuffer.fullFileName = null
-        return null
     }
 
     async startCommand(msg) {
@@ -120,7 +121,6 @@ class TgService {
 
     async infoCommand(msg) {
         const [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
-
         try {
             if (botBuffer.game_message_id > 0) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
@@ -151,7 +151,6 @@ class TgService {
             console.log(`--- Error startGame game_message_id = ${botBuffer.game_message_id}`)
         }
 
-
         await this.bot.sendMessage(getID(msg), `Загадай цифру от 0 до 10`)
 
         botBuffer[getID(msg)] = Math.floor(Math.random() * 10)
@@ -167,7 +166,7 @@ class TgService {
         let [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
 
         try {
-            //delete msg (видалити повідомлення з Зпробою вгадать число)
+            //delete msg (видалити повідомлення з Спробою вгадати число)
             if (botBuffer.count > 0 && botBuffer.try_message_id > 0) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.try_message_id)
             }
@@ -186,7 +185,7 @@ class TgService {
             }
 
             let keyboard = tgKeyboard.gameAgain()
-            await this.bot.sendMessage(getID(msg), `Вітаю, ти вгадав цифру ${data} з ${botBuffer.count + 1} cпроби`, keyboard)
+            await this.bot.sendMessage(getID(msg), `Вітаю, ти вгадав цифру ${data} з ${botBuffer.count + 1} спроби`, keyboard)
 
             botBuffer.count = 0
             botBuffer.game_message_id = 0
@@ -223,16 +222,22 @@ class TgService {
     }
 
     async aboutCommand(msg) {
-        const text = "1. Цей бот сворений для покращення навиків в Node JS\n" +
+        const text = "1. Цей бот створений для покращення навичок в Node JS\n" +
             "------------------------------\n" +
             "2. Можливо відправити будь-який текст \n" +
             "------------------------------\n" +
             "3. Відправлена картинка або фото буде збережено на диск або до БазиДаних\n" +
             "------------------------------\n" +
-            "4. Відправлений Sticker буде збережений як фото Профіля користувача Бота\n" +
+            "4. Відправлений Sticker буде збережений як фото Профілю користувача Бота\n" +
             "------------------------------\n" +
-            "5. Можна грати в простеньку гру і дивитись рекорсменів гри"
-        return this.bot.sendMessage(getID(msg), text)
+            "5. Можна грати в простеньку гру  та дивитись рекордсменів гри"
+        await this.bot.sendMessage(getID(msg), text);
+
+        const url = 'https://cosmits.github.io/Cosmits';
+        const text2 = `<a href="${url}">Developed by -=[CoS]=- © 2022</a>`;
+        return await this.bot.sendMessage(getID(msg), text2, { parse_mode: 'HTML' });
+
+
     }
 
     async saveStickerInProfile(msg) {
@@ -250,16 +255,16 @@ class TgService {
             if (botBuffer.game_message_id > 0) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
             }
+
+            if (data === '/yes') {
+                await dbService.findOrCreateUser(getID(msg), this.getUserName(msg), null, null, stickers[getID(msg)])
+                return this.bot.sendMessage(getID(msg), `Новий sticker збережений в профілі`)
+            } else {  ///    no
+                stickers[getID(msg)] = null
+                return this.bot.sendMessage(getID(msg), `Іншим разом`)
+            }
         } catch (e) {
             console.log(`--- Error yesNO ${botBuffer.game_message_id}`)
-        }
-
-        if (data === '/yes') {
-            await dbService.findOrCreateUser(getID(msg), this.getUserName(msg), null, null, stickers[getID(msg)])
-            return this.bot.sendMessage(getID(msg), `Новий стікер вже в профілі`)
-        } else {  ///    no
-            stickers[getID(msg)] = null
-            return this.bot.sendMessage(getID(msg), `Іншим разом`)
         }
     }
 
@@ -269,14 +274,18 @@ class TgService {
         await this.bot.sendMessage(getID(msg), `Профіль  ${userName}`)
 
         const keyboard = tgKeyboard.gameCancellation()
-        return await this.bot.sendMessage(getID(msg), `Результати Гри  ${right} / ${wrong}`, keyboard)
+        await this.bot.sendMessage(getID(msg), `Результати Гри  ${right} / ${wrong}`, keyboard)
+
+        const url = 'https://cosmits.github.io/Cosmits';
+        const text = `<a href="${url}">Developed by -=[CoS]=- © 2022</a>`;
+        return await this.bot.sendMessage(getID(msg), text, { parse_mode: 'HTML' });
     }
 
     //Send Error in to log and Chat
     async errorCommand(msg, error = undefined, text = '') {
         if (error === undefined) {
             console.log(msg)
-            return await this.bot.sendMessage(getID(msg), `Я тебе не розумію \nТи написав повідомлення => ${text}`)
+            return await this.bot.sendMessage(getID(msg), `Я тебе не розумію \nТи  написав повідомлення => ${text}`)
         } else {
             await this.bot.sendMessage(getID(msg), `Error in bot ${text}\n${error}`)
             return console.log(`--- Error in bot !!! ${text}\n`, error)

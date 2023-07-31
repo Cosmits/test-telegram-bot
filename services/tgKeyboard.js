@@ -45,8 +45,8 @@ class TgKeyboard {
             Key.callback('🎲 Start Game', '/again'),
             Key.callback('🤦 Додаткова інформація', '/about'),
             Key.callback('❌ Обнулити результати', '/cancellation'),
-            Key.callback('📦 Прочитати файли з DB', '/files_from_db'),
-            Key.callback('🏆 Рекодсмени гри', '/bestGamer'),
+            Key.callback('📦 Прочитати файли з БазиДаних', '/files_from_db'),
+            Key.callback('🏆 Рекордсмени гри', '/bestGamer'),
         ], {
             columns: 2
         }).reply()
