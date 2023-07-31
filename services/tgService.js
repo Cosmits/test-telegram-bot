@@ -142,23 +142,20 @@ class TgService {
     }
 
     async startGame(msg) {
-
         try {
             if (botBuffer.game_message_id > 0) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
             }
+            await this.bot.sendMessage(getID(msg), `Загадай цифру от 0 до 10`)
+    
+            botBuffer[getID(msg)] = Math.floor(Math.random() * 10)
+            // console.log(botBuffer[getID(msg)])
+            let keyboard = tgKeyboard.gameNumber()
+            const answer = await this.bot.sendMessage(getID(msg), `-=Відгадай=-`, keyboard)
+            botBuffer.game_message_id = answer.message_id
         } catch (e) {
             console.log(`--- Error startGame game_message_id = ${botBuffer.game_message_id}`)
         }
-
-        await this.bot.sendMessage(getID(msg), `Загадай цифру от 0 до 10`)
-
-        botBuffer[getID(msg)] = Math.floor(Math.random() * 10)
-        // console.log(botBuffer[getID(msg)])
-        let keyboard = tgKeyboard.gameNumber()
-        const answer = await this.bot.sendMessage(getID(msg), `-=Відгадай=-`, keyboard)
-        botBuffer.game_message_id = answer.message_id
-        return answer
     }
 
     async gameProcess(msg) {
