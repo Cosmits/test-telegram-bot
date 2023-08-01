@@ -107,10 +107,9 @@ class TgService {
     async startCommand(msg) {
         const createdUser = await dbService.findOrCreateUser(getID(msg), this.getUserName(msg))
         const [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
-        const keyboard = tgKeyboard.gameCancellation()
-
         await this.bot.sendSticker(getID(msg), stickers.fireBike)
-
+        
+        const keyboard = tgKeyboard.gameCancellation()
         if (createdUser) {
             //this is new user
             return this.bot.sendMessage(getID(msg), `Привіт. ${userName}\nРадий вітати тебе в ТЕЛЕГРАМ БОТІ`, keyboard)
