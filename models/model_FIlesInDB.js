@@ -1,4 +1,4 @@
-import {DataTypes, Model} from "sequelize"
+import { DataTypes, Model } from "sequelize"
 
 import sequelize from './db.js'
 import UserModel from './models_User.js'
@@ -12,19 +12,19 @@ import UserModel from './models_User.js'
 // })
 
 
-class FilesInDB extends Model {}
+class FilesInDB extends Model { }
 
 FilesInDB.init({
-    id: {type: DataTypes.INTEGER, primaryKey: true, unique: true, autoIncrement: true},
-    chatId: {type: DataTypes.STRING, unique: false},
-//    userName: {type: DataTypes.STRING, unique: false},
-    file: {type: DataTypes.BLOB('long'), unique: false},
-    }, {
+    id: { type: DataTypes.INTEGER, primaryKey: true, unique: true, autoIncrement: true },
+    chatId: { type: DataTypes.STRING, unique: false },
+    //    userName: {type: DataTypes.STRING, unique: false},
+    file: { type: DataTypes.BLOB('long'), unique: false },
+}, {
     sequelize,
     modelName: 'files'
 });
 
-UserModel.hasMany(FilesInDB, {as: 'FilesInDB', foreignKey: 'user_id'} );
+UserModel.hasMany(FilesInDB, { as: 'FilesInDB', foreignKey: 'user_id' });
 // const Creator = FilesInDB.belongsTo(UserModel, { as: 'creator' });
 
 export default FilesInDB

@@ -1,5 +1,6 @@
 import UserModel from "../models/models_User.js";
 import FilesInDB from "../models/model_FIlesInDB.js";
+import { stickers } from "../models/stickers.js";
 
 class DbService {
 
@@ -9,14 +10,18 @@ class DbService {
             userDB.set({
                 userName: userName,
                 right: 0,
-                wrong: 0,       // fireNotebook
-                userSticker: 'CAACAgIAAxkBAAIP2GLTMRlCUKQBvRy9IduAJGUD9DdiAAK8DAAChygwSe03kZlYIWgEKQQ',
+                wrong: 0,
+                userSticker: stickers.fireNotebook,
             });
         } else {
-            if (userName != null) userDB.set({ userName });
-            if (right != null) userDB.set({ right });
-            if (wrong != null) userDB.set({ wrong });
-            if (sticker != null) userDB.set({ userSticker: sticker, });
+            // if (userName != null) userDB.set({ userName });
+            // if (right != null) userDB.set({ right });
+            // if (wrong != null) userDB.set({ wrong });
+            // if (sticker != null) userDB.set({ userSticker: sticker });
+            userName && userDB.set({ userName });
+            right && userDB.set({ right });
+            wrong && userDB.set({ wrong });
+            sticker && userDB.set({ userSticker: sticker });
         }
         await userDB.save()
         return createdUserModel
@@ -24,13 +29,13 @@ class DbService {
 
     async getDataUser(chatId) {
         const userDB = await UserModel.findOne({ where: { chatId } })
-        return [userDB.userName, userDB.right, userDB.wrong, userDB.userSticker]
+        return userDB
     }
 
     async findBestGamer() {
         const max_right = await UserModel.max('right')
         const userDB = await UserModel.findOne({ where: { right: max_right } })
-        return [userDB.userName, userDB.right, userDB.wrong, userDB.userSticker]
+        return userDB
     }
 
     async saveOnDB(chatId, imageData) {
