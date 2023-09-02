@@ -4,16 +4,12 @@ import tokens from "../models/env.js"
 import TgKeyboard from './tgKeyboard.js'
 import DbService from "./dbService.js"
 import FsService from "./fsService.js"
+import { stickers } from "../models/stickers.js"
 
 const tgKeyboard = new TgKeyboard()
 const dbService = new DbService()
 const fsService = new FsService()
 
-const stickers = {
-    fireBike: 'CAACAgIAAxkBAAIP3WLTMp98DiDINPKm3fnnRcAixRXPAAJ2EQACwwABKUktuSMZZroOiCkE',
-    fireNotebook: 'CAACAgIAAxkBAAIP2GLTMRlCUKQBvRy9IduAJGUD9DdiAAK8DAAChygwSe03kZlYIWgEKQQ',
-    // поле з індексом Чата містить тимчасовий стікер для запису в БД
-}
 
 const botBuffer = {
     game_message_id: 0,     // повідомлення з Клавіатурою чисел для гри
@@ -84,7 +80,7 @@ class TgService {
                     await dbService.saveOnDB(getID(msg), imageData);
                     await fsService.delFile(dataFile);
                 }
-                return this.bot.sendMessage(getID(msg), `Файл завантажено до PostgreSQL ...`);
+                return this.bot.sendMessage(getID(msg), `Файл завантажено до БазиДаних PostgreSQL ...`);
             }
         } catch (error) {
             console.log(`--- Error saveToDB \n`, error)
@@ -94,6 +90,10 @@ class TgService {
     async getFilesList(msg) {
         try {
             const arrFiles = await dbService.getFilesListFromDB(getID(msg))
+            const { userName } = await dbService.getDataUser(getID(msg))
+
+            if (arrFiles.length === 0) return this.bot.sendMessage(getID(msg), `Привіт. ${userName}\n😢Ти не маєш файлів збережених в БазіДаних`)
+
             for (const el of arrFiles) {
                 const newFile = await fsService.writeFileFromBuffer(el.dataValues.file);
                 await this.bot.sendPhoto(getID(msg), newFile);
@@ -106,9 +106,9 @@ class TgService {
 
     async startCommand(msg) {
         const createdUser = await dbService.findOrCreateUser(getID(msg), this.getUserName(msg))
-        const [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
+        const { userName } = await dbService.getDataUser(getID(msg))
         await this.bot.sendSticker(getID(msg), stickers.fireBike)
-        
+
         const keyboard = tgKeyboard.gameCancellation()
         if (createdUser) {
             //this is new user
@@ -120,7 +120,7 @@ class TgService {
 
     async infoCommand(msg) {
         try {
-            const [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
+            const { userName, right, wrong, userSticker } = await dbService.getDataUser(getID(msg))
             if (botBuffer.game_message_id) {
                 await this.bot.deleteMessage(getID(msg), botBuffer.game_message_id)
                 botBuffer.game_message_id = 0
@@ -160,7 +160,7 @@ class TgService {
 
     async gameProcess(msg) {
         let data = msg.data.toString()
-        let [userName, right, wrong, userSticker] = await dbService.getDataUser(getID(msg))
+        let { right, wrong } = await dbService.getDataUser(getID(msg))
 
         try {
             //delete msg (видалити повідомлення з Спробою вгадати число)
@@ -236,8 +236,6 @@ class TgService {
         const url = 'https://cosmits.github.io/Cosmits';
         const text2 = `<a href="${url}">Developed by -=[CoS]=- © 2022</a>`;
         return await this.bot.sendMessage(getID(msg), text2, { parse_mode: 'HTML' });
-
-
     }
 
     async saveStickerInProfile(msg) {
@@ -270,7 +268,7 @@ class TgService {
     }
 
     async bestGamerCommand(msg) {
-        const [userName, right, wrong, userSticker] = await dbService.findBestGamer()
+        const { userName, right, wrong, userSticker } = await dbService.findBestGamer()
         await this.bot.sendSticker(getID(msg), userSticker)
         await this.bot.sendMessage(getID(msg), `Профіль  ${userName}`)
 
