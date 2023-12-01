@@ -2,11 +2,16 @@
   "name": "bot-nodejs",
   "version": "1.0.2",
   "description": "TelegramBot, Telegram-bot",
+  "private": true,
+  "engines": {
+    "node": ">18.17.0"
+  },
   "main": "index.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon --inspect index.js",
-    "start": "node index.js"
+    "start2": "node index.js",
+    "start": "nodemon --signal SIGQUIT -w index.js"
   },
   "keywords": [
     "TelegramBot",
@@ -17,12 +22,10 @@
   "dependencies": {
     "dotenv": "^16.0.1",
     "node-telegram-bot-api": "^0.58.0",
+    "nodemon": "^3.0.2",
     "pg": "^8.7.3",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.21.3",
     "telegram-keyboard": "^2.3.2"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.19"
   }
 }
