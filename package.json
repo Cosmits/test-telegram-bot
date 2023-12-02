@@ -10,8 +10,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --inspect index.js",
-    "start2": "node index.js",
-    "start": "nodemon --signal SIGQUIT -w index.js"
+    "start1": "nodemon --signal SIGQUIT -w index.js",
+    "start": "node index.js"
   },
   "keywords": [
     "TelegramBot",
