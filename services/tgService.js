@@ -1,6 +1,6 @@
 import TelegramBot from "node-telegram-bot-api"
 
-import tokens from "../models/env.js"
+import envs from "../models/env.js"
 import TgKeyboard from './tgKeyboard.js'
 import DbService from "./dbService.js"
 import FsService from "./fsService.js"
@@ -25,7 +25,7 @@ const getID = (msg) => (msg.chat) ? msg.chat.id.toString() : msg.from.id.toStrin
 class TgService {
 
     constructor(bot) {
-        this.bot = bot || new TelegramBot(tokens.TELEGRAM_TOKEN, { polling: true });
+        this.bot = bot || new TelegramBot(envs.TELEGRAM_TOKEN, { polling: true });
     }
 
     getUserName(msg) {

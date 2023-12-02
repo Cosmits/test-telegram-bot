@@ -1,8 +1,10 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
-const tokens = {
+const envs = {
   TELEGRAM_TOKEN: process.env.TELEGRAM_TOKEN,
+  TELEGRAM_URL: process.env.TELEGRAM_URL,
+  TELEGRAM_PORT: process.env.TELEGRAM_PORT,
 
   POSTGRESQL_HOST: process.env.POSTGRESQL_HOST,
   POSTGRESQL_PORT: process.env.POSTGRESQL_PORT,
@@ -11,4 +13,4 @@ const tokens = {
   POSTGRESQL_PASSWORD: process.env.POSTGRESQL_PASSWORD
 }
 
-export default tokens
+export default envs

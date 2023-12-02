@@ -1,13 +1,13 @@
 import { Sequelize } from 'sequelize'
-import tokens from './env.js'
+import envs from './env.js'
 
 const sequelize = new Sequelize(
-    tokens.POSTGRESQL_DB,
-    tokens.POSTGRESQL_USER,
-    tokens.POSTGRESQL_PASSWORD,
+    envs.POSTGRESQL_DB,
+    envs.POSTGRESQL_USER,
+    envs.POSTGRESQL_PASSWORD,
     {
-        host: tokens.POSTGRESQL_HOST,
-        port: tokens.POSTGRESQL_PORT,
+        host: envs.POSTGRESQL_HOST,
+        port: envs.POSTGRESQL_PORT,
         dialect: 'postgres',
         dialectOptions: {
             ssl: {
